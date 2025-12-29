@@ -1,248 +1,121 @@
---// RENNDND PRO UI
---// Keybind: RightShift
---// By RENNDND
+--// RennHubV1 Loader
+--// Framework-style Hub (UI, Tabs, Toggles, Keybind)
+--// Author: Renn
+
+if getgenv().RennHubV1_Loaded then return end
+getgenv().RennHubV1_Loaded = true
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
 local LP = Players.LocalPlayer
 
 -- Anti duplicate
 pcall(function()
-    if game.CoreGui:FindFirstChild("RENNDND_PRO") then
-        game.CoreGui.RENNDND_PRO:Destroy()
+    if game.CoreGui:FindFirstChild("RennHubV1") then
+        game.CoreGui.RennHubV1:Destroy()
     end
 end)
 
 -- UI
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "RENNDND_PRO"
+gui.Name = "RennHubV1"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.fromScale(0.32, 0.45)
-main.Position = UDim2.fromScale(0.34, 0.25)
-main.BackgroundColor3 = Color3.fromRGB(20,20,25)
+main.Size = UDim2.fromScale(0.38, 0.5)
+main.Position = UDim2.fromScale(0.31, 0.25)
+main.BackgroundColor3 = Color3.fromRGB(18,18,22)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
-
-local corner = Instance.new("UICorner", main)
-corner.CornerRadius = UDim.new(0,16)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,18)
 
 -- Title
 local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0.15,0)
+title.Size = UDim2.new(1,0,0.14,0)
 title.BackgroundTransparency = 1
-title.Text = "RENNDND PRO UI"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 22
-title.TextColor3 = Color3.fromRGB(255,80,80)
+title.Text = "RennHubV1"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 26
+title.TextColor3 = Color3.fromRGB(255,90,90)
 
--- Button maker
-local function MakeButton(text, posY)
-    local b = Instance.new("TextButton", main)
-    b.Size = UDim2.new(0.85,0,0.12,0)
-    b.Position = UDim2.new(0.075,0,posY,0)
-    b.BackgroundColor3 = Color3.fromRGB(35,35,45)
-    b.Text = text
+-- Tabs
+local tabs = Instance.new("Frame", main)
+tabs.Size = UDim2.new(0.25,0,0.86,0)
+tabs.Position = UDim2.new(0,0,0.14,0)
+tabs.BackgroundColor3 = Color3.fromRGB(24,24,30)
+Instance.new("UICorner", tabs).CornerRadius = UDim.new(0,14)
+
+local pages = Instance.new("Frame", main)
+pages.Size = UDim2.new(0.75,0,0.86,0)
+pages.Position = UDim2.new(0.25,0,0.14,0)
+pages.BackgroundTransparency = 1
+
+-- Helpers
+local function NewTab(name, order)
+    local b = Instance.new("TextButton", tabs)
+    b.Size = UDim2.new(0.9,0,0.1,0)
+    b.Position = UDim2.new(0.05,0,0.02 + (order*0.11),0)
+    b.Text = name
     b.Font = Enum.Font.GothamBold
-    b.TextSize = 16
+    b.TextSize = 14
+    b.BackgroundColor3 = Color3.fromRGB(35,35,45)
     b.TextColor3 = Color3.fromRGB(220,220,220)
-    b.AutoButtonColor = false
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-    return b
-end
 
--- Buttons
-local espPlayerBtn = MakeButton("ESP PLAYER : OFF", 0.18)
-local espKillerBtn = MakeButton("ESP KILLER : OFF", 0.32)
-local brightBtn    = MakeButton("FULL BRIGHT : OFF", 0.46)
-local reloadBtn    = MakeButton("RELOAD SCRIPT", 0.60)
-local closeBtn     = MakeButton("CLOSE UI", 0.74)
+    local page = Instance.new("Frame", pages)
+    page.Size = UDim2.new(1,0,1,0)
+    page.Visible = false
+    page.BackgroundTransparency = 1
 
--- States
-local ESPPlayer = false
-local ESPKiller = false
-local FullBright = false
-local ESPObjects = {}
-
--- ESP Function
-local function CreateESP(char, color)
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local box = Instance.new("BoxHandleAdornment")
-        box.Adornee = char
-        box.Size = char:GetExtentsSize()
-        box.AlwaysOnTop = true
-        box.ZIndex = 5
-        box.Color3 = color
-        box.Transparency = 0.6
-        box.Parent = gui
-        table.insert(ESPObjects, box)
-    end
-end
-
-local function ClearESP()
-    for _,v in pairs(ESPObjects) do
-        if v then v:Destroy() end
-    end
-    ESPObjects = {}
-end
-
--- ESP Loop
-RunService.RenderStepped:Connect(function()
-    ClearESP()
-    for _,plr in pairs(Players:GetPlayers()) do
-        if plr ~= LP and plr.Character then
-            if ESPPlayer then
-                CreateESP(plr.Character, Color3.fromRGB(0,255,0))
-            end
-            if ESPKiller and (plr.Name:lower():find("killer") or plr.TeamColor == BrickColor.new("Really red")) then
-                CreateESP(plr.Character, Color3.fromRGB(255,0,0))
-            end
+    b.MouseButton1Click:Connect(function()
+        for _,v in pairs(pages:GetChildren()) do
+            if v:IsA("Frame") then v.Visible = false end
         end
-    end
-end)
+        page.Visible = true
+    end)
 
--- Button logic
-espPlayerBtn.MouseButton1Click:Connect(function()
-    ESPPlayer = not ESPPlayer
-    espPlayerBtn.Text = "ESP PLAYER : "..(ESPPlayer and "ON" or "OFF")
-end)
+    return page
+end
 
-espKillerBtn.MouseButton1Click:Connect(function()
-    ESPKiller = not ESPKiller
-    espKillerBtn.Text = "ESP KILLER : "..(ESPKiller and "ON" or "OFF")
-end)
+local function NewToggle(parent, text, posY, callback)
+    local t = Instance.new("TextButton", parent)
+    t.Size = UDim2.new(0.9,0,0.12,0)
+    t.Position = UDim2.new(0.05,0,posY,0)
+    t.Text = text.." : OFF"
+    t.Font = Enum.Font.GothamBold
+    t.TextSize = 15
+    t.BackgroundColor3 = Color3.fromRGB(32,32,40)
+    t.TextColor3 = Color3.fromRGB(230,230,230)
+    Instance.new("UICorner", t).CornerRadius = UDim.new(0,10)
 
-brightBtn.MouseButton1Click:Connect(function()
-    FullBright = not FullBright
-    brightBtn.Text = "FULL BRIGHT : "..(FullBright and "ON" or "OFF")
-    Lighting.Brightness = FullBright and 5 or 1
-    Lighting.ClockTime = FullBright and 14 or 0
-end)
+    local state = false
+    t.MouseButton1Click:Connect(function()
+        state = not state
+        t.Text = text.." : "..(state and "ON" or "OFF")
+        callback(state)
+    end)
+end
 
-reloadBtn.MouseButton1Click:Connect(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/KazuOnTop/RennDnD/refs/heads/main/roblox.script"))()
-end)
+-- Tabs & Pages
+local combatPage = NewTab("Combat", 0)
+local visualPage = NewTab("Visual", 1)
+local miscPage   = NewTab("Misc", 2)
+combatPage.Visible = true
 
-closeBtn.MouseButton1Click:Connect(function()
-    gui.Enabled = false
-end)
+-- Example toggles (kosong / placeholder)
+NewToggle(combatPage, "Auto Feature 1", 0.05, function(v) end)
+NewToggle(combatPage, "Auto Feature 2", 0.20, function(v) end)
 
--- Toggle Key
+NewToggle(visualPage, "ESP Example", 0.05, function(v) end)
+NewToggle(visualPage, "Full Bright", 0.20, function(v) end)
+
+NewToggle(miscPage, "Auto Farm", 0.05, function(v) end)
+NewToggle(miscPage, "Anti AFK", 0.20, function(v) end)
+
+-- Toggle key
 UIS.InputBegan:Connect(function(i,gp)
     if not gp and i.KeyCode == Enum.KeyCode.RightShift then
         gui.Enabled = not gui.Enabled
     end
 end)
-
---// ===============================
---// RENNDND PRO - COMBAT & AUTO
---// ===============================
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local LP = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-
--- STATES
-local AutoAim = false
-local AutoParry = false
-local AutoGen = false
-local AutoHeal = false
-
--- Tambah tombol UI
-local function AddToggle(text, posY, callback)
-    local b = Instance.new("TextButton", main)
-    b.Size = UDim2.new(0.85,0,0.12,0)
-    b.Position = UDim2.new(0.075,0,posY,0)
-    b.BackgroundColor3 = Color3.fromRGB(35,35,45)
-    b.Text = text.." : OFF"
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 16
-    b.TextColor3 = Color3.fromRGB(220,220,220)
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-
-    b.MouseButton1Click:Connect(function()
-        callback()
-        b.Text = text.." : "..(callback(true) and "ON" or "OFF")
-    end)
-end
-
--- AUTO AIM (PISTOL)
-RunService.RenderStepped:Connect(function()
-    if not AutoAim then return end
-    local closest, dist = nil, math.huge
-
-    for _,plr in pairs(Players:GetPlayers()) do
-        if plr ~= LP and plr.Character and plr.Character:FindFirstChild("Head") then
-            local mag = (plr.Character.Head.Position - Camera.CFrame.Position).Magnitude
-            if mag < dist and mag < 300 then
-                dist = mag
-                closest = plr
-            end
-        end
-    end
-
-    if closest then
-        Camera.CFrame = CFrame.new(
-            Camera.CFrame.Position,
-            closest.Character.Head.Position
-        )
-    end
-end)
-
--- AUTO PARRY
-task.spawn(function()
-    while task.wait(0.1) do
-        if AutoParry and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-            for _,plr in pairs(Players:GetPlayers()) do
-                if plr ~= LP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local d = (plr.Character.HumanoidRootPart.Position -
-                              LP.Character.HumanoidRootPart.Position).Magnitude
-                    if d < 10 then
-                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
-                        task.wait()
-                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- AUTO GENERATOR (PERFECT)
-task.spawn(function()
-    while task.wait(0.3) do
-        if AutoGen then
-            for _,v in pairs(workspace:GetDescendants()) do
-                if v.Name:lower():find("generator") and v:IsA("ProximityPrompt") then
-                    fireproximityprompt(v)
-                end
-            end
-        end
-    end
-end)
-
--- AUTO HEAL
-task.spawn(function()
-    while task.wait(1) do
-        if AutoHeal and LP.Character then
-            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
-            if hum and hum.Health < hum.MaxHealth * 0.6 then
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.H, false, game)
-                task.wait(0.1)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.H, false, game)
-            end
-        end
-    end
-end)
-
--- BUTTONS
-AddToggle("AUTO AIM (PISTOL)", 0.88, function(v) AutoAim = not AutoAim return AutoAim end)
-AddToggle("AUTO PARRY", 1.02, function(v) AutoParry = not AutoParry return AutoParry end)
-AddToggle("AUTO GENERATOR", 1.16, function(v) AutoGen = not AutoGen return AutoGen end)
-AddToggle("AUTO HEAL", 1.30, function(v) AutoHeal = not AutoHeal return AutoHeal end)
